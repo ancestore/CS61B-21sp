@@ -2,8 +2,7 @@
  *  @author YOUR NAME HERE
  */
 public class Collatz {
-
-    /** Buggy implementation of nextNumber! */
+    //the thing you need to change//
     public static int nextNumber(int n) {
         if(n % 2 == 0)
             return n / 2 ;
@@ -20,4 +19,5 @@ public class Collatz {
         System.out.println();
     }
 }
+
 
