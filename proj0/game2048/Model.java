@@ -1,8 +1,6 @@
 package game2048;
 
-import java.util.Formatter;
-import java.util.Observable;
-
+import java.util.*;
 
 /** The state of a game of 2048.
  *  @author TODO: YOUR NAME HERE
@@ -109,16 +107,104 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
+        String originalBoard = this.board.toString();
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+        // 移动
+        for (int i = 0; i < 4; i++) {
+            tiltOneColumn(i);
+        }
+        board.setViewingPerspective(Side.NORTH);
 
+        if (!board.toString().equals(originalBoard)) {
+            changed = true;
+        }
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+    private void tiltOneColumn(int col) {
+        Tile[] tiles = new Tile[4];
+        Tile[] originalTiles = new Tile[4];
+        Stack<Tile> tileStack = new Stack<>();
+        for (int i = 0; i < 4; i++) {
+            tiles[i] = board.tile(col, i);
+            if (tiles[i] != null) {
+                tileStack.push(tiles[i]);
+            }
+        }
+        System.arraycopy(tiles,0,originalTiles,0,4);
+
+        switch (tileStack.size()) {
+            case 1:
+                Tile t1 = tileStack.pop();
+                board.move(col, 3, t1);
+                break;
+            case 2:
+                Tile[] t2 = new Tile[2];
+                for (int i = 0; i < 2; i++) {
+                    t2[i] = tileStack.pop();
+                }
+                if (t2[0].value() == t2[1].value()) {
+                    board.move(col, 3, t2[0]);
+                    board.move(col, 3, t2[1]);
+                    score += 2 * t2[0].value();
+                } else {
+                    board.move(col, 3, t2[0]);
+                    board.move(col, 2, t2[1]);
+                }
+                break;
+            case 3:
+                Tile[] t3 = new Tile[3];
+                for (int i = 0; i < 3; i++) {
+                    t3[i] = tileStack.pop();
+                }
+                if (t3[0].value() == t3[1].value()) {
+                    board.move(col, 3, t3[0]);
+                    board.move(col, 3, t3[1]);
+                    board.move(col, 2, t3[2]);
+                    score += 2 * t3[0].value();
+                } else if (t3[1].value() == t3[2].value()) {
+                    board.move(col, 3, t3[0]);
+                    board.move(col, 2, t3[1]);
+                    board.move(col, 2, t3[2]);
+                    score += 2 * t3[1].value();
+                } else {
+                    board.move(col, 3, t3[0]);
+                    board.move(col, 2, t3[1]);
+                    board.move(col, 1, t3[2]);
+                }
+                break;
+            case 4:
+                Tile[] t4 = new Tile[4];
+                for (int i = 0; i < 4; i++) {
+                    t4[i] = tileStack.pop();
+                }
+                if (t4[0].value() == t4[1].value()) {
+                    board.move(col, 3, t4[1]);
+                    score += 2 * t4[0].value();
+                    if (t4[2].value() == t4[3].value()) {
+                        board.move(col, 2, t4[2]);
+                        board.move(col, 2, t4[3]);
+                        score += 2 * t4[2].value();
+                    } else {
+                        board.move(col, 2, t4[2]);
+                        board.move(col, 1, t4[3]);
+                    }
+                } else if (t4[1].value() == t4[2].value()) {
+                    board.move(col, 2, t4[2]);
+                    board.move(col, 1, t4[3]);
+                    score += 2 * t4[1].value();
+                } else if (t4[2].value() == t4[3].value()) {
+                    board.move(col, 1, t4[3]);
+                    score += 2 * t4[2].value();
+                }
+                break;
+        }
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -138,6 +224,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for(int i=0; i<4; i++) {
+            for(int j=0; j<4; j++) {
+            if(b.tile(i,j) ==   null){
+                return true;
+            }
+            }
+        }
         return false;
     }
 
@@ -148,9 +241,17 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i,j) != null) {
+                    if (b.tile(i, j).value() == MAX_PIECE) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
-
     /**
      * Returns true if there are any valid moves on the board.
      * There are two ways that there can be valid moves:
@@ -159,9 +260,21 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (i+1 < b.size() && b.tile(i, j).value() == b.tile(i+1, j).value() ||
+                        i-1 >=0 && i-1 < b.size() && b.tile(i, j).value() == b.tile(i-1, j).value() ||
+                        j-1 >= 0 && j-1 < b.size() && b.tile(i, j).value() == b.tile(i, j-1).value() ||
+                        j+1 < b.size() && b.tile(i, j).value() == b.tile(i, j+1).value()) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
-
 
     @Override
      /** Returns the model as a string, used for debugging. */

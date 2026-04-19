@@ -16,12 +16,27 @@ public class TimeAList {
             System.out.printf("%12d %12.2f %12d %12.2f\n", N, time, opCount, timePerOp);
         }
     }
-
     public static void main(String[] args) {
         timeAListConstruction();
     }
-
     public static void timeAListConstruction() {
         // TODO: YOUR CODE HERE
+        AList<Integer> Ns= new AList<>();
+        AList<Double>  times =new AList<>();
+        AList<Integer> opCounts = new AList<>();
+        int N=1000;
+        while(N<=1280000){
+            Stopwatch sw = new Stopwatch();
+            AList<Integer> textlist= new AList<>();
+            for(int i=0;i<N;i++) {
+                textlist.addLast(i);
+            }
+            double timeseconds =sw.elapsedTime();
+            Ns.addLast(N);
+            times.addLast(timeseconds);
+            opCounts.addLast(N);
+            N*=2;
+        }
+        printTimingTable(Ns, times, opCounts);
     }
 }
